@@ -1,4 +1,4 @@
-const gravity = 0.6
+const gravity = 0.2
 
 class Sprite {
     constructor({position, velocity, dimesions}){
@@ -14,8 +14,18 @@ class Sprite {
     }
 
     update(){
-        this.position.x = this.velocity.x 
-        this.position.y = this.velocity.y
+        
+
+        if (this.position.y+this.height >= canvas.height){
+            this.velocity.y = canvas.height - (this.position.y+this.height)
+        } else{
+            this.velocity.y += gravity
+        }
+        
+        this.position.x += this.velocity.x 
+        this.position.y += this.velocity.y
+
+        this.draw()
     }
 };
 
@@ -26,7 +36,7 @@ const player = new Sprite({
     },
     velocity: {
         x: 0,
-        y:2
+        y: 0
     },
     dimesions:{
         width: 50,
