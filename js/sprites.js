@@ -29,10 +29,45 @@ class Sprite {
     }
 };
 
-const player = new Sprite({
+class Fighter extends Sprite {
+    constructor({
+        position,
+        velocity,
+        dimesions
+    }){
+        super({
+            position,
+            velocity,
+            dimesions
+        })
+
+    this.velocity = velocity
+    this.width = dimesions.width
+    this.height = dimesions.height
+
+    }
+
+}
+
+const player = new Fighter({
     position: {
         x: 100,
-        y: 100
+        y: 0
+    },
+    velocity: {
+        x: 0,
+        y: 10
+    },
+    dimesions:{
+        width: 50,
+        height: 150
+    }
+})
+
+const player2 = new Fighter({
+    position: {
+        x: 500,
+        y: 20
     },
     velocity: {
         x: 0,
@@ -40,6 +75,6 @@ const player = new Sprite({
     },
     dimesions:{
         width: 50,
-        height: 150
+        height: 200
     }
 })
