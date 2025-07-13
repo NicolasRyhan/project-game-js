@@ -8,8 +8,22 @@ canvas.width = canvasWidth
 canvas.height = canvasHeight
 
 
-ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+let prevTime = 0
+
+animate()
+
 
 function animate() {
     window.requestAnimationFrame(animate)
+
+    ctx.fillStyle = "black"
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+
+    player.update()
+
+    let delta = (perfomace.now() - prevTime) / 1000
+    let fps = 1 / delta
+
+    prevTime = perfomace.now()
+    //console.log(`FPS: ${fps}`)
 }
