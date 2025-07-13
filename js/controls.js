@@ -21,11 +21,13 @@ window.addEventListener("keydown", e => {
     switch(key){
         case "ArrowLeft":
         case "a":
-            keys.a.pressed = true            
+            keys.a.pressed = true
+            player.lastKeyPressed = key            
             break
         case "ArrowRight":
         case "d":
-            keys.d.pressed = true           
+            keys.d.pressed = true
+            player.lastKeyPressed = key           
             break
         case "ArrowUp":
         case "w":
@@ -63,14 +65,14 @@ function handleControls() {
     function movement(){
         player.velocity.x = 0
 
-        if (keys.a.pressed){
+        if (keys.a.pressed && ["a", "ArrowLeft"].includes(player.lastKeyPressed)) {
             player.velocity.x = -1.5 * 3.4
         }
-        if (keys.d.pressed) {
+        if (keys.d.pressed && ["d", "ArrowRight"].includes(player.lastKeyPressed)) {
             player.velocity.x = 1.5 * 3.4
         }
         if (keys.w.pressed) {
-            player.velocity.y = -16
+            player.velocity.y = -7
         }
     }
 }

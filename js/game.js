@@ -22,7 +22,7 @@ function animate() {
     ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 
     player.update()
-    player2.update()
+    //player2.update()
 
     let delta = (perfomace.now() - prevTime) / 1000
     let fps = 1 / delta
