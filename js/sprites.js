@@ -1,53 +1,207 @@
 const gravity = 0.2
 
-class Sprite {
-    constructor({position, velocity, dimesions}){
+const floorHeight = 96
 
+const backgroundSpritePath = "/assents/background/placeholder.png"
+const defaultObjectSpritePath = "/assents/objects/square.svg"
+
+class Sprite {
+    constructor({ position, velocity, source, scale, offset, sprites }) {
         this.position = position
         this.velocity = velocity
-        this.width = dimesions.width
-        this.height = dimesions.height
-    }
-    draw(){
-        ctx.fillStyle = "white"
-        ctx.fillRect(this.position.x, this.position.y, this.width, this.height)
+
+        this.scale = scale || 1
+        this.image = new Image() 
+        this.image.src = source || defaultObjectSpritePath
+        this.width = this.image.width * this.scale
+        this.height = this.image.height * this.scale
+
+        this.width = this.image.width * this.scale
+        this.height = this.image.height * this.scale
+
+        this.offset = offset || {
+            x: 0,
+            y: 0
+        }
+
+        this.sprites = sprites || {
+            idle: {
+                src: this.image.src,
+                totalSpriteFrames: 1,
+                framesPerSpriteFrame: 1
+            }
+        }
+
+        this.currentSprite = this.sprites.idle
+
+        this.currentSpriteFrame = 0
+        this.elapsedTime = 0
+        this.totalSpriteFrames = this.sprites.idle.totalSpriteFrames
+        this.framesPerSpriteFrame = this.sprites.idle.framesPerSpriteFrame
     }
 
-    update(){
-        
+    setSprite(sprite) {
+        this.currentSprite = this.sprites[sprite]
 
-        if (this.position.y+this.height > canvas.height){
-            this.position.y = canvas.height - this.height
-            this.velocity.y = 0
-        } else{
-            this.velocity.y += gravity
+        if (!this.currentSprite) {
+            this.currentSprite = this.sprites.idle
+        }
+    }
+
+    loadSprite() {
+        let previousSprite = this.image.src
+
+        this.image = new Image()
+        this.image.src = this.currentSprite.src
+        this.width = this.image.width * this.scale
+        this.height = this.image.height * this.scale
+
+        this.totalSpriteFrames = this.currentSprite.totalSpriteFrames
+        this.framesPerSpriteFrame = this.currentSprite.framesPerSpriteFrame
+
+        let newSprite = this.image.src
+
+        if (previousSprite !== newSprite) {
+            
+            console.log("Detected sprite change: ", previousSprite.split("/").pop(), " -> ", newSprite.split("/").pop())
+            
+            let previousSpriteImage = new Image()
+            previousSpriteImage.src = previousSprite
+
+            
+            this.position.y += (previousSpriteImage.height - this.image.height) * this.scale
+        }
+    }
+
+    draw() {        
+        ctx.imageSmoothingEnabled = false;
+
+         
+        const xScale = this.facing === "left" ? -1 : 1;
+
+        ctx.save();
+        ctx.translate(this.position.x + this.offset.x, this.position.y + this.offset.y);
+        ctx.scale(xScale, 1); // 
+
+        ctx.drawImage(
+            this.image,
+            this.currentSpriteFrame * this.image.width / this.totalSpriteFrames,
+            0,
+            this.image.width / this.totalSpriteFrames,
+            this.image.height,
+            0,
+            0,
+            this.width / this.totalSpriteFrames * xScale, 
+            this.height
+        );
+
+        ctx.restore();
+    }
+
+    animate() {
+        this.elapsedTime += 1
+
+        if (this.elapsedTime >= this.framesPerSpriteFrame) {
+            this.currentSpriteFrame += 1
+
+            if (this.currentSpriteFrame >= this.totalSpriteFrames) {
+                this.currentSpriteFrame = 0
+            }
+
+            this.elapsedTime = 0
         }
         
-        this.position.x += this.velocity.x 
-        this.position.y += this.velocity.y
-
-        this.draw()
     }
-};
+
+    update() {
+        this.draw()
+        this.animate()
+    }
+}
 
 class Fighter extends Sprite {
     constructor({
         position,
         velocity,
-        dimesions
-    }){
+        attackBox,
+        sprites,
+        scale
+    }) {
         super({
             position,
             velocity,
-            dimesions
+            scale,
+            sprites
         })
 
-    this.velocity = velocity
-    this.width = dimesions.width
-    this.height = dimesions.height
+        this.velocity = velocity
 
-    this.lastKeyPressed
+        this.attackBox = attackBox || {
+            position: {
+                x: this.position.x,
+                y: this.position.y,
+            },
+            width: 125,
+            height: 50
+        }
 
+        this.isAttacking
+        this.attackCooldown = 500
+        this.onAttackCooldown
+
+        this.lastKeyPressed
+        this.onGround
+    }
+
+    gravity() {
+        if (this.position.y + this.height >= canvas.height - floorHeight) {
+            this.onGround = true
+        } else {
+            this.onGround = false
+        }
+
+        if (this.position.y + this.height > canvas.height - floorHeight) {
+            this.position.y = canvas.height - this.height - floorHeight
+            this.velocity.y = 0
+        } else {
+            if (!this.onGround) this.velocity.y += gravity
+        }
+
+        this.position.x += this.velocity.x
+        this.position.y += this.velocity.y
+
+        this.attackBox.position.x = this.position.x
+        this.attackBox.position.y = this.position.y
+    }
+        
+    update() {
+        this.gravity()
+        this.loadSprite()
+        //this.loadAttackBox()
+        this.draw()
+        this.animate()
+    }
+
+    attack() {
+        if (this.onAttackCooldown) return
+
+        this.isAttacking = true
+        this.onAttackCooldown = true
+
+        player.setSprite("attacking")
+
+        setTimeout(() => {
+            this.isAttacking = false
+        }, 400)
+
+        setTimeout(() => {
+            this.onAttackCooldown = false
+        }, this.attackCooldown)
+    }
+
+    jump() {        
+        if (!this.onGround) return
+        this.velocity.y = -8.5
     }
 
 }
@@ -60,13 +214,33 @@ const player = new Fighter({
     velocity: {
         x: 0,
         y: 10
-    },
-    dimesions:{
-        width: 50,
-        height: 150
+    }, 
+    scale: 4,
+    sprites: {
+        idle: {
+            src: "/assents/player/idle.png",
+            totalSpriteFrames: 11,
+            framesPerSpriteFrame: 18
+        },
+        running: {
+            src: "/assents/player/running.png",
+            totalSpriteFrames: 10,
+            framesPerSpriteFrame: 8
+        },
+        jumping: {
+            src: "/assents/player/jumping.png",
+            totalSpriteFrames: 4,
+            framesPerSpriteFrame: 8
+        },
+        attacking: {
+            src: "/assents/player/slash.png",
+            totalSpriteFrames: 7,
+            framesPerSpriteFrame: 9
+        }
     }
 })
 
+/* anda não sei fazer segundo jogador
 const player2 = new Fighter({
     position: {
         x: 500,
@@ -76,8 +250,16 @@ const player2 = new Fighter({
         x: 0,
         y: 0
     },
-    dimesions:{
+    dimensions: {
         width: 50,
         height: 200
     }
+}) */
+
+const background = new Sprite({
+    position: {
+        x: 0,
+        y: 0
+    },
+    source: backgroundSpritePath
 })
